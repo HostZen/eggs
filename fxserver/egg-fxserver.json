@@ -151,7 +151,7 @@
     {
       "name": "Player slots",
       "name_translations": {},
-      "description": "How many players can join at once. Over 48 needs Element Club on the key's Cfx.re account.",
+      "description": "How many players can join at once.",
       "description_translations": {},
       "order": 4,
       "env_variable": "MAX_PLAYERS",
