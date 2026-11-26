@@ -1,0 +1,286 @@
+{
+  "uuid": "e8984fee-72ae-47c7-9fb7-d353b3d893ce",
+  "name": "FXServer",
+  "description": "FiveM and RedM servers, with txAdmin. Versions are picked on the FiveM extension's Artifacts page. By HostZen.",
+  "author": "support@hostzen.net",
+  "config": {
+    "files": {
+      "server.cfg": {
+        "create_new": false,
+        "parser": "file",
+        "replace": [
+          {
+            "match": "endpoint_add_tcp",
+            "insert_new": false,
+            "update_existing": true,
+            "if_value": null,
+            "replace_with": "endpoint_add_tcp \"0.0.0.0:{{server.build.default.port}}\""
+          },
+          {
+            "match": "endpoint_add_udp",
+            "insert_new": false,
+            "update_existing": true,
+            "if_value": null,
+            "replace_with": "endpoint_add_udp \"0.0.0.0:{{server.build.default.port}}\""
+          },
+          {
+            "match": "sv_hostname",
+            "insert_new": false,
+            "update_existing": true,
+            "if_value": null,
+            "replace_with": "sv_hostname \"{{server.build.env.SERVER_HOSTNAME}}\""
+          },
+          {
+            "match": "sv_maxclients",
+            "insert_new": false,
+            "update_existing": true,
+            "if_value": null,
+            "replace_with": "sv_maxclients {{server.build.env.MAX_PLAYERS}}"
+          },
+          {
+            "match": "set sv_licenseKey",
+            "insert_new": false,
+            "update_existing": true,
+            "if_value": null,
+            "replace_with": "set sv_licenseKey {{server.build.env.FIVEM_LICENSE}}"
+          }
+        ]
+      }
+    },
+    "startup": {
+      "done": [
+        "succeeded. Welcome!",
+        "All ready! Please access:"
+      ],
+      "strip_ansi": false
+    },
+    "stop": {
+      "type": "signal",
+      "value": "SIGINT"
+    }
+  },
+  "scripts": {
+    "installation": {
+      "container": "ghcr.io/hostzen/yolks:installer",
+      "entrypoint": "bash",
+      "content": ""
+    }
+  },
+  "startup_commands": {
+    "Default": "fxserver"
+  },
+  "force_outgoing_ip": false,
+  "separate_port": false,
+  "features": [],
+  "docker_images": {
+    "FXServer": "ghcr.io/hostzen/yolks:fxserver"
+  },
+  "file_denylist": [
+    "alpine/"
+  ],
+  "variables": [
+    {
+      "name": "Cfx.re license key",
+      "name_translations": {},
+      "description": "Your server's key from portal.cfx.re. With txAdmin on, it fills in txAdmin's setup for you.",
+      "description_translations": {},
+      "order": 1,
+      "env_variable": "FIVEM_LICENSE",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "secret": true,
+      "rules": [
+        "nullable",
+        "string",
+        "max:64"
+      ]
+    },
+    {
+      "name": "Use txAdmin",
+      "name_translations": {},
+      "description": "txAdmin is FiveM's web panel for running and managing your server. Turn it off to run server.cfg directly.",
+      "description_translations": {},
+      "order": 2,
+      "env_variable": "TXADMIN_ENABLE",
+      "default_value": "1",
+      "user_viewable": true,
+      "user_editable": true,
+      "secret": false,
+      "rules": [
+        "required",
+        "boolean"
+      ]
+    },
+    {
+      "name": "Server name",
+      "name_translations": {},
+      "description": "Shown in the FiveM server list.",
+      "description_translations": {},
+      "order": 3,
+      "env_variable": "SERVER_HOSTNAME",
+      "default_value": "My FXServer",
+      "user_viewable": true,
+      "user_editable": true,
+      "secret": false,
+      "rules": [
+        "required",
+        "string",
+        "max:128",
+        "exclude_if:TXADMIN_ENABLE,1"
+      ]
+    },
+    {
+      "name": "Steam Web API key",
+      "name_translations": {},
+      "description": "Only needed if your scripts use Steam. Get one at steamcommunity.com/dev/apikey.",
+      "description_translations": {},
+      "order": 4,
+      "env_variable": "STEAM_WEBAPIKEY",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "secret": true,
+      "rules": [
+        "nullable",
+        "string",
+        "max:64",
+        "exclude_if:TXADMIN_ENABLE,1"
+      ]
+    },
+    {
+      "name": "Player slots",
+      "name_translations": {},
+      "description": "How many players can join at once.",
+      "description_translations": {},
+      "order": 5,
+      "env_variable": "MAX_PLAYERS",
+      "default_value": "48",
+      "user_viewable": true,
+      "user_editable": false,
+      "secret": false,
+      "rules": [
+        "required",
+        "integer",
+        "between:1,2048"
+      ]
+    },
+    {
+      "name": "FXServer version",
+      "name_translations": {},
+      "description": "Change it on the Artifacts page, which reinstalls the server for you.",
+      "description_translations": {},
+      "order": 6,
+      "env_variable": "FIVEM_VERSION",
+      "default_value": "recommended",
+      "user_viewable": true,
+      "user_editable": false,
+      "secret": false,
+      "rules": [
+        "required",
+        "string",
+        "max:50"
+      ]
+    },
+    {
+      "name": "Game",
+      "name_translations": {},
+      "description": "fivem or redm. Set by the host.",
+      "description_translations": {},
+      "order": 10,
+      "env_variable": "CFX_GAME",
+      "default_value": "fivem",
+      "user_viewable": false,
+      "user_editable": false,
+      "secret": false,
+      "rules": [
+        "required",
+        "in:fivem,redm"
+      ]
+    },
+    {
+      "name": "txAdmin port (fallback)",
+      "name_translations": {},
+      "description": "Used only when the server has no second port: the FiveM extension otherwise gives txAdmin the server's second allocation.",
+      "description_translations": {},
+      "order": 11,
+      "env_variable": "TXHOST_TXA_PORT",
+      "default_value": "40120",
+      "user_viewable": false,
+      "user_editable": false,
+      "secret": false,
+      "rules": [
+        "required",
+        "integer",
+        "between:1024,65535"
+      ]
+    },
+    {
+      "name": "txAdmin provider name",
+      "name_translations": {},
+      "description": "Shown in txAdmin's warnings about host settings. 2-16 characters.",
+      "description_translations": {},
+      "order": 12,
+      "env_variable": "TXHOST_PROVIDER_NAME",
+      "default_value": "HostZen",
+      "user_viewable": false,
+      "user_editable": false,
+      "secret": false,
+      "rules": [
+        "required",
+        "string",
+        "between:2,16"
+      ]
+    },
+    {
+      "name": "txAdmin provider logo",
+      "name_translations": {},
+      "description": "Shown on txAdmin's login page. {theme} becomes light or dark. At most 224x96.",
+      "description_translations": {},
+      "order": 13,
+      "env_variable": "TXHOST_PROVIDER_LOGO",
+      "default_value": "https://brand.hostzen.net/wordmark/txadmin-{theme}.png",
+      "user_viewable": false,
+      "user_editable": false,
+      "secret": false,
+      "rules": [
+        "nullable",
+        "string",
+        "max:255"
+      ]
+    },
+    {
+      "name": "Download link",
+      "name_translations": {},
+      "description": "Set by the FiveM extension's Artifacts page: the chosen build's fx.tar.xz.",
+      "description_translations": {},
+      "order": 14,
+      "env_variable": "DOWNLOAD_URL",
+      "default_value": "",
+      "user_viewable": false,
+      "user_editable": false,
+      "secret": false,
+      "rules": [
+        "nullable",
+        "string",
+        "max:500"
+      ]
+    },
+    {
+      "name": "Copy default resources",
+      "name_translations": {},
+      "description": "1 copies CFX's default resources on the next install. Set by the Artifacts page and reset afterwards.",
+      "description_translations": {},
+      "order": 15,
+      "env_variable": "CFX_DEFAULT_RESOURCES",
+      "default_value": "0",
+      "user_viewable": false,
+      "user_editable": false,
+      "secret": false,
+      "rules": [
+        "required",
+        "in:0,1"
+      ]
+    }
+  ]
+}
