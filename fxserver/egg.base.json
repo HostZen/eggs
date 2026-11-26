@@ -61,7 +61,7 @@
   },
   "scripts": {
     "installation": {
-      "container": "ghcr.io/hostzen/yolks:installer",
+      "container": "ghcr.io/hostzen/installers:alpine",
       "entrypoint": "bash",
       "content": ""
     }
