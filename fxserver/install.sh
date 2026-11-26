@@ -14,10 +14,16 @@ if [ -z "${NO_COLOR:-}" ]; then
 else
   B='' D='' A='' G='' X='' R=''
 fi
-step() { printf '\n%s▸%s %s%s%s\n' "$A" "$R" "$B" "$*" "$R"; }
+# Calagopus Wings reads these for the panel's progress bar and failure reason.
+progress() { [ -n "${INSTALL_PROGRESS_FILE:-}" ] && printf '%s %s\n' "$1" "$2" >>"$INSTALL_PROGRESS_FILE" || true; }
+step() {
+  progress "$1" "$2"
+  printf '\n%s▸%s %s%s%s\n' "$A" "$R" "$B" "$2" "$R"
+}
 info() { printf '  %s%s%s\n' "$D" "$*" "$R"; }
 ok() { printf '  %s✔%s %s\n' "$G" "$R" "$*"; }
 fail() {
+  [ -n "${INSTALL_STATUS_FILE:-}" ] && printf '%s\n' "${1^} ${2:-}" >"$INSTALL_STATUS_FILE"
   printf '\n%s✖ Install failed:%s %s\n' "$X$B" "$R" "$1" >&2
   [ -n "${2:-}" ] && printf '  %s\n' "$2" >&2
   printf '  %sThe server was left as it was. Fix the above and reinstall to try again.%s\n\n' "$D" "$R" >&2
@@ -31,7 +37,7 @@ fetch() { curl -fsSL --retry 3 --retry-delay 5 --connect-timeout 20 -A "$UA" "$@
 printf '\n  %s%sHOSTZEN%s  FXServer install\n' "$B" "$A" "$R"
 cd "$SERVER" || fail "the server folder isn't mounted."
 
-step "Finding the build"
+step 5 "Finding the build"
 url="${DOWNLOAD_URL:-}"
 version="${FIVEM_VERSION:-recommended}"
 if [ -n "$url" ]; then
@@ -49,15 +55,16 @@ fi
 build=$(grep -oE '/[0-9]+-[0-9a-f]{40}/' <<<"$url" | grep -oE '^/[0-9]+' | tr -d / || true)
 ok "FXServer ${build:-build} from ${url%%/artifacts/*}"
 
-step "Downloading"
+step 15 "Downloading"
 fetch -o "$WORK/fx.tar.xz" "$url" || fail "the download failed." "CFX may have removed this build. Pick another on the Artifacts page."
 info "$(du -h "$WORK/fx.tar.xz" | cut -f1) downloaded."
 xz -t "$WORK/fx.tar.xz" 2>/dev/null || fail "the download is damaged or isn't an FXServer build."
 tar -tJf "$WORK/fx.tar.xz" alpine/opt/cfx-server/FXServer >/dev/null 2>&1 ||
   fail "the download isn't an FXServer Linux build." "Pick a version on the Artifacts page."
 ok "Archive checked."
+progress 70 "Checked"
 
-step "Installing"
+step 80 "Installing"
 # Unpack beside the live build, then swap, so a failure leaves the old build in place.
 rm -rf .alpine-staging alpine.new alpine.old
 mkdir .alpine-staging
@@ -73,7 +80,7 @@ ok "FXServer ${build:-} installed in alpine/."
 
 txadmin="${TXADMIN_ENABLE:-1}"
 if [ "${CFX_DEFAULT_RESOURCES:-0}" = "1" ] || { [ ! -d resources ] && [ "$txadmin" != "1" ]; }; then
-  step "Default resources"
+  step 90 "Default resources"
   git clone -q --depth 1 "$DEFAULT_RESOURCES" "$WORK/cfx-server-data" ||
     fail "couldn't download CFX's default resources." "GitHub may be down. Try again, or reinstall without them."
   mkdir -p resources
@@ -82,7 +89,7 @@ if [ "${CFX_DEFAULT_RESOURCES:-0}" = "1" ] || { [ ! -d resources ] && [ "$txadmi
 fi
 
 if [ "$txadmin" != "1" ] && [ ! -f server.cfg ]; then
-  step "server.cfg"
+  step 95 "Writing server.cfg"
   gamename=gta5
   [ "${CFX_GAME:-fivem}" = "redm" ] && gamename=rdr3
   cat >server.cfg <<CFG
@@ -114,4 +121,6 @@ fi
 
 rmdir logs 2>/dev/null || true
 
+progress 100 "Installed"
+[ -n "${INSTALL_STATUS_FILE:-}" ] && echo 0 >"$INSTALL_STATUS_FILE"
 printf '\n%s✔ Install complete.%s FXServer %s is ready to start.\n\n' "$G$B" "$R" "${build:-}"
