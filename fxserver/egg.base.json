@@ -133,7 +133,7 @@
     {
       "name": "Steam Web API key",
       "name_translations": {},
-      "description": "Only needed if your scripts use Steam. Get one at steamcommunity.com/dev/apikey.",
+      "description": "Only needed if your scripts use Steam. Get one at [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey).",
       "description_translations": {},
       "order": 6,
       "env_variable": "STEAM_WEBAPIKEY",
